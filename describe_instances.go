@@ -27,10 +27,12 @@ package main
 
 import (
 	"fmt"
-	//"reflect"
+	"os"
 
+	//"reflect"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/jedib0t/go-pretty/v6/table"
 )
 
 func main() {
@@ -38,7 +40,9 @@ func main() {
 	sess := session.Must(session.NewSessionWithOptions(session.Options{
 		SharedConfigState: session.SharedConfigEnable,
 	}))
-
+	t := table.NewWriter()
+	t.SetOutputMirror(os.Stdout)
+	t.AppendHeader(table.Row{"#", "Instance-ID", "Status"})
 	// Create new EC2 client
 	ec2Svc := ec2.New(sess)
 
@@ -47,13 +51,18 @@ func main() {
 	if err != nil {
 		fmt.Println("Error", err)
 	} else {
-		fmt.Println("Success", result.Reservations)
+		//fmt.Println("Success", result.Reservations)
 		for _, r := range result.Reservations {
 			//fmt.Println("Reservation ID: " + *r.ReservationId)
 			//fmt.Println("Instance IDs:")
 			for _, i := range r.Instances {
-				fmt.Println("Instance IDs:" + *i.InstanceId)
-				fmt.Println("Public IP:" + *i.PublicIpAddress)
+				//fmt.Println("Instance IDs:" + *i.InstanceId)
+				//fmt.Println("Public IP:" + *i.PublicIpAddress)
+				//fmt.Println(*i.State.Name)
+				t.AppendRows([]table.Row{
+					{1, *i.InstanceId, *i.State.Name},
+				})
+				t.AppendSeparator()
 			}
 
 			//fmt.Println("")
@@ -61,4 +70,5 @@ func main() {
 	}
 	//fmt.Println(reflect.TypeOf(result))
 
+	t.Render()
 }
